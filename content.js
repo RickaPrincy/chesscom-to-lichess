@@ -139,10 +139,43 @@
     }
   }
 
-  function update() {
-    const onGame = GAME_URL_RE.test(location.href);
+  // État de la partie affichée : { id, finished }. finished = null tant qu'on ne sait pas.
+  let game = null;
+  let lastCheck = 0;
+  let checking = false;
+
+  // Demande à chess.com si la partie est terminée (true / false / null si inconnu).
+  async function fetchFinished(type, id) {
+    for (const t of type ? [type] : ["live", "daily"]) {
+      try {
+        const res = await fetch(`/callback/${t}/game/${id}`, { credentials: "include" });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.game && typeof data.game.isFinished === "boolean") return data.game.isFinished;
+      } catch (e) {
+        // on essaie le type suivant
+      }
+    }
+    return null;
+  }
+
+  async function checkStatus() {
+    if (!game || game.finished || checking) return;
+    checking = true;
+    lastCheck = Date.now();
+    const current = game;
+    const finished = await fetchFinished(current.type, current.id);
+    checking = false;
+    if (game !== current) return; // l'utilisateur a changé de page entre-temps
+    // Statut inconnu (endpoint indisponible) : on affiche le bouton quand même.
+    current.finished = finished === null ? true : finished;
+    render();
+  }
+
+  function render() {
+    const show = !!(game && game.finished);
     let btn = document.getElementById(BTN_ID);
-    if (onGame && !btn) {
+    if (show && !btn) {
       btn = document.createElement("button");
       btn.id = BTN_ID;
       btn.type = "button";
@@ -150,22 +183,32 @@
       btn.title = "Importer cette partie sur Lichess et ouvrir l'analyse";
       btn.addEventListener("click", run);
       document.body.appendChild(btn);
-    } else if (!onGame && btn) {
+    } else if (!show && btn) {
       btn.remove();
     }
   }
 
+  function onUrlChange() {
+    const m = location.href.match(GAME_URL_RE);
+    game = m ? { type: m[1] || null, id: m[2], finished: false } : null;
+    render();
+    checkStatus();
+  }
+
   browser.runtime.onMessage.addListener((msg) => {
-    if (msg.type === "trigger") run();
-    else if (msg.type === "toast") toast(msg.text, true);
+    if (msg.type === "trigger") {
+      if (game && game.finished) run();
+      else toast("La partie est encore en cours.", true);
+    } else if (msg.type === "toast") toast(msg.text, true);
   });
 
   let lastUrl = "";
   setInterval(() => {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
-      update();
+      onUrlChange();
+    } else if (game && !game.finished && Date.now() - lastCheck > 3000) {
+      checkStatus(); // partie en cours : on revérifie toutes les 3 s
     }
   }, 500);
-  update();
 })();
