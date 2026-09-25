@@ -1,0 +1,40 @@
+#c2l-analyze-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2147483647;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #fff;
+  color: #161512;
+  font: 600 14px/1.2 system-ui, sans-serif;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+#c2l-analyze-btn:hover { background: #e8e8e8; }
+#c2l-analyze-btn:disabled { opacity: 0.7; cursor: wait; }
+
+#c2l-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 70px;
+  z-index: 2147483647;
+  max-width: 340px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #2b6e2b;
+  color: #fff;
+  font: 13px/1.4 system-ui, sans-serif;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+#c2l-toast.c2l-show { opacity: 1; transform: none; }
+#c2l-toast.c2l-error { background: #a33; }
+
+/* Dialogue "Partager" invisible pendant que l'extension lit le PGN */
+html.c2l-scraping [role="dialog"],
+html.c2l-scraping [class*="modal" i] { opacity: 0 !important; }
