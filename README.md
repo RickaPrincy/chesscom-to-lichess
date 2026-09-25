@@ -2,6 +2,8 @@
 
 A Firefox extension that sends a Chess.com game to Lichess analysis in one click.
 
+![The "Analyser sur Lichess" button on a Chess.com game page](docs/screenshot.png)
+
 On any Chess.com game page, a **♞ Analyser sur Lichess** button appears in the bottom-right corner. Clicking it:
 
 1. grabs the game's PGN,
